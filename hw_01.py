@@ -2,7 +2,7 @@ import time
 from unicodedata import name
 import requests, json, pprint
 
-token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMzhRUTkiLCJzdWIiOiJCNEYzNVEiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJzZXQgcm94eSBycHJvIHJudXQgcnNsZSByYWN0IHJyZXMgcmxvYyByd2VpIHJociBydGVtIiwiZXhwIjoxNjYxMzUwODMzLCJpYXQiOjE2NjA3NDYwMzN9.-6KKpR38nXavOTwsBrJBKuMQD3thwGeFDguLTMiOPM0"
+token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMzhSNkIiLCJzdWIiOiJCNEYzNVEiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJzZXQgcm94eSBybnV0IHJwcm8gcnNsZSByYWN0IHJsb2MgcnJlcyByd2VpIHJociBydGVtIiwiZXhwIjoxNjkyMjk1NDQ0LCJpYXQiOjE2NjA3NTk0NDR9.bILcGIrPRXPWRrWBZDKRLsZdtTKKqPUpZ4NZZ-U3k5g"
 
 def print_jokes():
     resp = requests.get("https://v2.jokeapi.dev/joke/Programming?type=single")
@@ -27,14 +27,18 @@ def get_name(token):
 
 def get_hearrate(token):
     myheader = {"Authorization":"Bearer "+token}
-    myurl  = "https://api.fitbit.com/1/user/-/activities/heart/date/2022-08-20/1d/5min.json"
+    myurl  = "https://api.fitbit.com/1/user/-/activities/heart/date/today/1d/1min.json"
     resp  = requests.get(url=myurl, headers=myheader).json()
-    #print(resp)
     activity_heart = resp['activities-heart']
     jsn_str = activity_heart[0]
     value  = jsn_str['value']
     restingHeartRate  = value['restingHeartRate']
-    return restingHeartRate
+    heart_rate_log = resp['activities-heart-intraday']['dataset']
+    recent_heart_rate = heart_rate_log[-1]
+    t = time.strptime(recent_heart_rate['time'], "%H:%M:%S")
+    timevalue_12hour = time.strftime( "%I:%M %p", t)
+    heart_rate = recent_heart_rate['value']
+    return timevalue_12hour, heart_rate
 
 def get_steps(token):
     myheader = {"Authorization":"Bearer "+token}
@@ -78,8 +82,8 @@ get_activity_steps(token)
 name = get_name(token)
 print("\nUser's name is {}\n".format(name))
 
-HR = get_hearrate(token)
-print("{}'s resting heart rate is {} BPM\n".format(name, HR))
+timestamp, HR = get_hearrate(token)
+print("{}'s most recent heart rate recorded at {} is {} beats per minute\n".format(name, timestamp, HR))
 
 steps = get_steps(token)
 print('{} walked {} steps today\n'.format(name, steps))
